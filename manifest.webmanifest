@@ -1,0 +1,19 @@
+{
+  "name": "Objetos Perdidos",
+  "short_name": "Perdidos",
+  "description": "Publicá y reclamá objetos perdidos de la facultad.",
+  "lang": "es",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f7fb",
+  "theme_color": "#1f4fd8",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
