@@ -1,10 +1,10 @@
-# 🎒 Objetos Perdidos
+# 🎒 fiubaLost
 
-App web instalable (PWA) para que la comunidad de la facultad **publique y reclame objetos perdidos**.
+App web instalable (PWA) para que la comunidad de FIUBA **publique y reclame objetos perdidos**.
 
 - El **personal** publica los objetos que encuentra y dónde retirarlos.
 - Los **alumnos** publican lo que perdieron (y dónde), y pueden reclamar objetos encontrados.
-- Cualquiera puede **ver y buscar** el listado sin cuenta; para publicar o reclamar hace falta registrarse.
+- Cualquiera puede **ver y buscar** el listado sin cuenta; para publicar o reclamar hace falta registrarse con un **mail @fi.uba.ar**.
 
 Es una PWA: funciona en el navegador y se puede **instalar en el celular** como una app, sin pasar por tiendas.
 
@@ -36,7 +36,8 @@ objetos-perdidos/
 ├── icons/icon.svg
 ├── manifest.webmanifest
 ├── sw.js               # service worker
-└── supabase/schema.sql # tablas, reglas de seguridad y bucket de fotos
+├── supabase/schema.sql          # tablas, reglas de seguridad y bucket de fotos
+└── supabase/restrict-domain.sql # restringe el registro a @fi.uba.ar
 ```
 
 ## Puesta en marcha
@@ -46,6 +47,10 @@ objetos-perdidos/
 1. Creá una cuenta y un proyecto en [supabase.com](https://supabase.com) (el plan gratuito alcanza para probar).
 2. Andá a **SQL Editor → New query**, pegá el contenido de [`supabase/schema.sql`](supabase/schema.sql) y ejecutalo. Esto crea las tablas, las reglas de seguridad y el bucket `item-photos`.
 3. En **Project Settings → API** copiá la **Project URL** y la **anon public key**.
+
+### 1b. Restringir el registro a @fi.uba.ar
+
+En el mismo SQL Editor, ejecutá [`supabase/restrict-domain.sql`](supabase/restrict-domain.sql). Crea una regla en la base de datos que rechaza cualquier registro con otro dominio. La app también lo valida en pantalla, pero la regla real es la de la base de datos.
 
 ### 2. Configurar la app
 
@@ -109,7 +114,7 @@ git push -u origin main
 
 ## Hoja de ruta
 
-- [ ] Restringir el registro a mails institucionales
+- [x] Restringir el registro a mails institucionales (@fi.uba.ar)
 - [ ] Notificaciones por mail cuando se aprueba un reclamo
 - [ ] Panel del personal con estadísticas y filtros
 - [ ] Vencimiento automático de publicaciones antiguas

@@ -6,5 +6,5 @@ export const SUPABASE_URL = 'https://zxmdxfgtmpzaquwgirwn.supabase.co';
 export const SUPABASE_ANON_KEY = 'sb_publishable_NOn7uQM1HGNHnTzgzVTbyg_bMaZHjzM';
 
 // Nombre que se muestra en la app.
-export const APP_NAME = 'Objetos Perdidos';
+export const APP_NAME = 'FiubaLost';
 export const FACULTAD = 'Facultad';

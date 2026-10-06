@@ -3,6 +3,11 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY, APP_NAME } from './config.js';
 
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// Solo se puede crear cuenta con mail de este dominio.
+// (La regla real está en la base de datos: supabase/restrict-domain.sql)
+const ALLOWED_EMAIL_DOMAIN = 'fi.uba.ar';
+const isAllowedEmail = (email) => email.trim().toLowerCase().endsWith('@' + ALLOWED_EMAIL_DOMAIN);
+
 const $ = (sel, el = document) => el.querySelector(sel);
 const app = $('#app');
 const state = { user: null, profile: null, tab: 'found', q: '' };
@@ -39,6 +44,8 @@ function friendlyError(err) {
   if (/Invalid login/i.test(m)) return 'Email o contraseña incorrectos.';
   if (/Email not confirmed/i.test(m)) return 'Confirmá tu email antes de ingresar (revisá tu bandeja).';
   if (/already registered/i.test(m)) return 'Ese email ya tiene una cuenta.';
+  if (/Database error saving new user/i.test(m) || /fi\.uba\.ar/i.test(m))
+    return `Solo se puede registrar con un mail @${ALLOWED_EMAIL_DOMAIN}.`;
   return m;
 }
 
@@ -465,7 +472,7 @@ function viewLogin() {
           }</button>
         </p>
       </form>
-      <p class="muted small">Para publicar y reclamar necesitás una cuenta. Ver el listado es libre.</p>`;
+      <p class="muted small">Para publicar y reclamar necesitás una cuenta con tu mail @${ALLOWED_EMAIL_DOMAIN}. Ver el listado es libre.</p>`;
 
     $('#toggle').addEventListener('click', () => {
       signup = !signup;
@@ -479,6 +486,12 @@ function viewLogin() {
       btn.disabled = true;
       const email = $('#email').value.trim();
       const password = $('#pass').value;
+      if (signup && !isAllowedEmail(email)) {
+        box.textContent = `Para crear una cuenta necesitás un mail @${ALLOWED_EMAIL_DOMAIN}.`;
+        box.hidden = false;
+        btn.disabled = false;
+        return;
+      }
       const res = signup
         ? await sb.auth.signUp({ email, password, options: { data: { full_name: $('#name').value.trim() } } })
         : await sb.auth.signInWithPassword({ email, password });

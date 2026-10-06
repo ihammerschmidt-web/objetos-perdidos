@@ -1,7 +1,7 @@
 {
-  "name": "Objetos Perdidos",
-  "short_name": "Perdidos",
-  "description": "Publicá y reclamá objetos perdidos de la facultad.",
+  "name": "fiubaLost",
+  "short_name": "fiubaLost",
+  "description": "Publicá y reclamá objetos perdidos de FIUBA.",
   "lang": "es",
   "start_url": "./",
   "scope": "./",
