@@ -1,6 +1,6 @@
 // Service worker: deja la "cáscara" de la app disponible sin conexión.
 // Los datos (Supabase) siempre se piden a la red.
-const CACHE = 'fiubalost-v2';
+const CACHE = 'fiubalost-v3';
 const SHELL = [
   './',
   'index.html',

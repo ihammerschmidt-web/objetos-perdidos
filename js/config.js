@@ -8,3 +8,6 @@ export const SUPABASE_ANON_KEY = 'sb_publishable_NOn7uQM1HGNHnTzgzVTbyg_bMaZHjzM
 // Nombre que se muestra en la app.
 export const APP_NAME = 'FiubaLost';
 export const FACULTAD = 'Facultad';
+
+// Sedes que se ofrecen al publicar. Editá la lista si cambian (no hace falta tocar la base).
+export const SEDES = ['Paseo Colón', 'Las Heras', 'Otra'];

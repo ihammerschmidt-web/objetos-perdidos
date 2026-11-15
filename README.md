@@ -52,6 +52,10 @@ objetos-perdidos/
 
 En el mismo SQL Editor, ejecutá [`supabase/restrict-domain.sql`](supabase/restrict-domain.sql). Crea una regla en la base de datos que rechaza cualquier registro con otro dominio. La app también lo valida en pantalla, pero la regla real es la de la base de datos.
 
+### 1c. Sede y horario
+
+Ejecutá también [`supabase/add-location-fields.sql`](supabase/add-location-fields.sql). Agrega a las publicaciones la **sede** y la **franja horaria** (desde/hasta). La lista de sedes se edita en `js/config.js` (`SEDES`).
+
 ### 2. Configurar la app
 
 Editá `js/config.js`:
@@ -115,6 +119,9 @@ git push -u origin main
 ## Hoja de ruta
 
 - [x] Restringir el registro a mails institucionales (@fi.uba.ar)
+- [x] Sede, aula y horario en cada publicación
+- [ ] Moderación con IA al publicar (datos personales como DNI, contenido sexual o inapropiado, también en fotos)
+- [ ] Chatbot que ayuda a buscar objetos
 - [ ] Notificaciones por mail cuando se aprueba un reclamo
 - [ ] Panel del personal con estadísticas y filtros
 - [ ] Vencimiento automático de publicaciones antiguas

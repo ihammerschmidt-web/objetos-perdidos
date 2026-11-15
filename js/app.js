@@ -1,5 +1,5 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-import { SUPABASE_URL, SUPABASE_ANON_KEY, APP_NAME } from './config.js';
+import { SUPABASE_URL, SUPABASE_ANON_KEY, APP_NAME, SEDES } from './config.js';
 
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -10,7 +10,7 @@ const isAllowedEmail = (email) => email.trim().toLowerCase().endsWith('@' + ALLO
 
 const $ = (sel, el = document) => el.querySelector(sel);
 const app = $('#app');
-const state = { user: null, profile: null, tab: 'found', q: '' };
+const state = { user: null, profile: null, tab: 'found', q: '', campus: '' };
 
 const TYPE_LABEL = { found: 'Encontrado', lost: 'Perdido' };
 const STATUS_LABEL = { open: 'Abierto', returned: 'Resuelto' };
@@ -28,6 +28,12 @@ const fmtDate = (d) => {
   return `${day}/${m}/${y}`;
 };
 
+const fmtTime = (t) => String(t ?? '').slice(0, 5);
+const fmtRange = (from, to) =>
+  !from ? '' : to ? `${fmtTime(from)} a ${fmtTime(to)} h` : `desde las ${fmtTime(from)} h`;
+const sedeOptions = (selected) =>
+  SEDES.map((s) => `<option ${s === selected ? 'selected' : ''}>${esc(s)}</option>`).join('');
+
 let toastTimer;
 function toast(msg) {
   const el = $('#toast');
@@ -41,6 +47,7 @@ function friendlyError(err) {
   const m = err?.message || String(err);
   if (/row-level security/i.test(m)) return 'No tenés permiso para hacer esto.';
   if (/duplicate key/i.test(m)) return 'Ya enviaste un reclamo para este objeto.';
+  if (/items_time_order/i.test(m)) return 'La hora "hasta" tiene que ser posterior a "desde".';
   if (/Invalid login/i.test(m)) return 'Email o contraseña incorrectos.';
   if (/Email not confirmed/i.test(m)) return 'Confirmá tu email antes de ingresar (revisá tu bandeja).';
   if (/already registered/i.test(m)) return 'Ese email ya tiene una cuenta.';
@@ -122,7 +129,8 @@ function itemCard(it) {
         <span class="badge ${esc(it.type)}">${TYPE_LABEL[it.type]}</span>
         ${it.status === 'returned' ? '<span class="badge returned">Resuelto</span>' : ''}
         <h3>${esc(it.title)}</h3>
-        <div class="muted small">📍 ${esc(it.location)} · ${fmtDate(it.event_date)}</div>
+        <div class="muted small">📍 ${esc([it.campus, it.location].filter(Boolean).join(' · '))}</div>
+        <div class="muted small">📅 ${fmtDate(it.event_date)}${it.time_from ? ' · 🕒 ' + fmtRange(it.time_from, it.time_to) : ''}</div>
       </div>
     </a>`;
 }
@@ -138,6 +146,10 @@ async function viewList() {
       <input type="search" id="q" placeholder="Buscar: mochila, llaves, aula 4…" value="${esc(state.q)}">
       <button class="btn" type="submit">Buscar</button>
     </form>
+    <select id="campusFilter" aria-label="Filtrar por sede" style="max-width:260px;margin-bottom:16px">
+      <option value="">Todas las sedes</option>
+      ${sedeOptions(state.campus)}
+    </select>
     <div id="results"><p class="muted">Buscando…</p></div>`;
 
   app.querySelectorAll('.tab').forEach((b) =>
@@ -152,6 +164,11 @@ async function viewList() {
     viewList();
   });
 
+  $('#campusFilter').addEventListener('change', (e) => {
+    state.campus = e.target.value;
+    viewList();
+  });
+
   let query = sb
     .from('items')
     .select('*')
@@ -159,9 +176,10 @@ async function viewList() {
     .eq('status', 'open')
     .order('created_at', { ascending: false })
     .limit(60);
+  if (state.campus) query = query.eq('campus', state.campus);
   const term = state.q.replace(/[,()%*_\\]/g, ' ').trim();
   if (term) {
-    query = query.or(`title.ilike.%${term}%,description.ilike.%${term}%,location.ilike.%${term}%`);
+    query = query.or(`title.ilike.%${term}%,description.ilike.%${term}%,location.ilike.%${term}%,campus.ilike.%${term}%`);
   }
   const { data, error } = await query;
   if (error) throw error;
@@ -263,8 +281,9 @@ async function viewItem(id) {
       </div>
       <h1>${esc(it.title)}</h1>
       <div class="meta">
-        <div>📍 <strong>${it.type === 'found' ? 'Dónde se encontró' : 'Dónde se perdió'}:</strong> ${esc(it.location)}</div>
-        <div>📅 <strong>Fecha:</strong> ${fmtDate(it.event_date)}</div>
+        ${it.campus ? `<div>🏛️ <strong>Sede:</strong> ${esc(it.campus)}</div>` : ''}
+        <div>📍 <strong>${it.type === 'found' ? 'Dónde se encontró' : 'Dónde se perdió'} (aula o lugar):</strong> ${esc(it.location)}</div>
+        <div>📅 <strong>Fecha:</strong> ${fmtDate(it.event_date)}${it.time_from ? ' · 🕒 ' + fmtRange(it.time_from, it.time_to) : ''}</div>
         ${it.pickup_point ? `<div>🏢 <strong>Retirar en:</strong> ${esc(it.pickup_point)}</div>` : ''}
       </div>
       ${it.description ? `<p style="white-space:pre-wrap">${esc(it.description)}</p>` : ''}
@@ -336,11 +355,22 @@ function viewNew() {
       <label for="title">Qué es</label>
       <input id="title" required minlength="3" maxlength="100" placeholder="Ej: Campera azul, llaves con llavero rojo">
 
-      <label for="location" id="locLabel">Dónde lo perdiste</label>
-      <input id="location" required minlength="2" maxlength="150" placeholder="Ej: Aula 4, biblioteca, cantina">
+      <label for="campus">Sede</label>
+      <select id="campus" required>
+        <option value="" disabled selected>Elegí la sede…</option>
+        ${sedeOptions('')}
+      </select>
 
-      <label for="date">Fecha aproximada</label>
+      <label for="location" id="locLabel">Aula o lugar donde lo perdiste</label>
+      <input id="location" required minlength="2" maxlength="150" placeholder="Ej: Aula 402 (4º piso), biblioteca, cantina">
+
+      <label for="date">Fecha</label>
       <input id="date" type="date" required value="${today}" max="${today}">
+
+      <div class="row">
+        <div><label for="tfrom">Desde (hora aprox.)</label><input id="tfrom" type="time" required></div>
+        <div><label for="tto">Hasta (opcional)</label><input id="tto" type="time"></div>
+      </div>
 
       <div id="pickupWrap" hidden>
         <label for="pickup">Dónde retirarlo</label>
@@ -360,7 +390,7 @@ function viewNew() {
   const typeSel = $('#type');
   const sync = () => {
     const found = typeSel.value === 'found';
-    $('#locLabel').textContent = found ? 'Dónde se encontró' : 'Dónde lo perdiste';
+    $('#locLabel').textContent = found ? 'Aula o lugar donde se encontró' : 'Aula o lugar donde lo perdiste';
     $('#pickupWrap').hidden = !found;
   };
   typeSel.addEventListener('change', sync);
@@ -373,6 +403,9 @@ function viewNew() {
     box.hidden = true;
     btn.disabled = true;
     try {
+      const tfrom = $('#tfrom').value;
+      const tto = $('#tto').value;
+      if (tto && tto < tfrom) throw new Error('La hora "hasta" tiene que ser posterior a "desde".');
       let photo_url = null;
       const file = $('#photo').files[0];
       if (file) {
@@ -389,7 +422,10 @@ function viewNew() {
         .insert({
           type,
           title: $('#title').value.trim(),
+          campus: $('#campus').value,
           location: $('#location').value.trim(),
+          time_from: tfrom,
+          time_to: tto || null,
           event_date: $('#date').value,
           description: $('#desc').value.trim(),
           pickup_point: type === 'found' ? $('#pickup').value.trim() || null : null,
