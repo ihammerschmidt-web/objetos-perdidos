@@ -69,7 +69,22 @@ export const SUPABASE_ANON_KEY = 'tu-anon-key';
 
 ### 3. Correrla en tu computadora
 
-Los módulos ES y el service worker necesitan un servidor (no se puede abrir `index.html` con doble clic):
+**Opción A — Con Asistente IA (Chatbot de Gemini):**
+
+1. Copiá `.env.example` a `.env` y agregá tu clave de Gemini:
+   ```bash
+   GEMINI_API_KEY="tu-api-key-de-gemini"
+   ```
+2. Instalá las dependencias y arrancá el servidor:
+   ```bash
+   npm install
+   npm run dev
+   ```
+3. Abrí <http://localhost:3000>.
+
+**Opción B — Solo frontend estático (sin chatbot de IA):**
+
+Los módulos ES y el service worker necesitan un servidor local (no se puede abrir `index.html` con doble clic):
 
 ```bash
 cd objetos-perdidos
@@ -120,8 +135,9 @@ git push -u origin main
 
 - [x] Restringir el registro a mails institucionales (@fi.uba.ar)
 - [x] Sede, aula y horario en cada publicación
+- [x] Vista interactiva de Sedes de FIUBA con fotos e información de referencia
+- [x] Chatbot / Asistente con IA para buscar objetos y guiar a la comunidad (Gemini)
 - [ ] Moderación con IA al publicar (datos personales como DNI, contenido sexual o inapropiado, también en fotos)
-- [ ] Chatbot que ayuda a buscar objetos
 - [ ] Notificaciones por mail cuando se aprueba un reclamo
 - [ ] Panel del personal con estadísticas y filtros
 - [ ] Vencimiento automático de publicaciones antiguas

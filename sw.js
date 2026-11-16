@@ -1,6 +1,6 @@
 // Service worker: deja la "cáscara" de la app disponible sin conexión.
 // Los datos (Supabase) siempre se piden a la red.
-const CACHE = 'fiubalost-v3';
+const CACHE = 'fiubalost-v4';
 const SHELL = [
   './',
   'index.html',
@@ -28,8 +28,8 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   const url = new URL(req.url);
-  // Solo archivos propios y solo GET; todo lo demás (Supabase, CDN) va directo a la red.
-  if (req.method !== 'GET' || url.origin !== self.location.origin) return;
+  // Solo archivos propios y solo GET; /api/ y recursos externos van directo a la red.
+  if (req.method !== 'GET' || url.origin !== self.location.origin || url.pathname.startsWith('/api/')) return;
 
   // Network-first: siempre intenta la versión nueva, y usa la copia si no hay conexión.
   event.respondWith(
